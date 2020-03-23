@@ -1,0 +1,35 @@
+/* *{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+} */
+
+#cards {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.card{
+  flex: 7% 0 1;
+  height: 8vw;
+  border: 2px solid #e0e0e0;
+  margin: 2px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.card img {
+  max-width: 30%;
+  align-self: center;
+}
+
+.card p {
+  margin: 3px;
+  font-size: 10px;
+}
+
+.card p:last-child {
+  transform: rotate(180deg);
+}
