@@ -1,9 +1,22 @@
+const GAME_STATE = {
+  FirstCardAwaits: 'FirstCardAwaits',
+  SecondCardAwaits: 'SecondeCardAwaits',
+  CardMatchFailed: 'CardsMatchFailed',
+  CardsMatched: 'CardsMatched',
+  GameFinished: 'GameFinished'
+}
+
 const Symbols = [
   'https://image.flaticon.com/icons/svg/105/105223.svg',//黑桃
   'https://image.flaticon.com/icons/svg/105/105220.svg',//紅心
   'https://image.flaticon.com/icons/svg/105/105212.svg',//方塊
   'https://image.flaticon.com/icons/svg/105/105219.svg'//梅花
 ]
+
+const model = {
+  //暫存牌組
+  revealedCard: []
+}
 
 const view = {
   //渲染牌背元件
@@ -46,12 +59,21 @@ const view = {
         return number
     }
   },
-  //渲染所有牌
-  displayCards() {
+  //渲染所有牌面
+  displayCards(indexes) {
     const rootElement = document.querySelector('#cards')
-    rootElement.innerHTML = utility.getRandomNumberArray(52).map(index => this.getCardElement(index)).join('')
+    rootElement.innerHTML = indexes.map(index => this.getCardElement(index)).join('')
   }
 }
+
+const controller = {
+  //起初遊戲狀態
+  currentState: GAME_STATE.FirstCardAwaits,
+  generateCards() {
+    view.displayCards(utility.getRandomNumberArray(52))
+  }
+}
+
 const utility = {
   //洗牌演算法
   getRandomNumberArray(count) {
@@ -63,7 +85,8 @@ const utility = {
     return number
   }
 }
-view.displayCards()
+
+controller.generateCards()
 
 document.querySelectorAll('.card').forEach(card => {
   card.addEventListener('click', () => {
