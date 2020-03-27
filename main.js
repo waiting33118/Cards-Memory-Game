@@ -15,9 +15,9 @@ const Symbols = [
 
 const model = {
   //暫存牌組
-  revealedCard: [],
+  revealedCards: [],
   isRevealedCardsMatched() {
-    return this.revealedCard[0].dataset.index % 13 === this.revealedCard[1].dataset.index % 13
+    return this.revealedCards[0].dataset.index % 13 === this.revealedCards[1].dataset.index % 13
   }
 }
 
@@ -37,15 +37,16 @@ const view = {
     `
   },
   //翻牌
-  flipCard(card) {
-    // console.log(card)
-    if (card.classList.contains('back')) {
-      card.classList.remove('back')
-      card.innerHTML = this.getCardContent(Number(card.dataset.index))
-      return
-    }
-    card.classList.add('back')
-    card.innerHTML = null
+  flipCards(...cards) {
+    cards.map(card => {
+      if (card.classList.contains('back')) {
+        card.classList.remove('back')
+        card.innerHTML = this.getCardContent(Number(card.dataset.index))
+        return
+      }
+      card.classList.add('back')
+      card.innerHTML = null
+    })
   },
   //替換數字為AJQK
   transformNumber(number) {
@@ -67,8 +68,10 @@ const view = {
     const rootElement = document.querySelector('#cards')
     rootElement.innerHTML = indexes.map(index => this.getCardElement(index)).join('')
   },
-  pairCard(card) {
-    card.classList.add('paired')
+  pairCards(...cards) {
+    cards.map(card => {
+      card.classList.add('paired')
+    })
   }
 }
 
@@ -82,32 +85,31 @@ const controller = {
     if (!card.classList.contains('back')) return
     switch (this.currentState) {
       case GAME_STATE.FirstCardAwaits:
-        view.flipCard(card)
-        model.revealedCard.push(card)
+        view.flipCards(card)
+        model.revealedCards.push(card)
         this.currentState = GAME_STATE.SecondCardAwaits
         break
       case GAME_STATE.SecondCardAwaits:
-        view.flipCard(card)
-        model.revealedCard.push(card)
+        view.flipCards(card)
+        model.revealedCards.push(card)
         if (model.isRevealedCardsMatched()) {
           this.currentState = GAME_STATE.CardsMatched
-          view.pairCard(model.revealedCard[0])
-          view.pairCard(model.revealedCard[1])
-          model.revealedCard = []
+          view.pairCards(...model.revealedCards)
+          model.revealedCards = []
           this.currentState = GAME_STATE.FirstCardAwaits
         } else {
           this.currentState = GAME_STATE.CardMatchFailed
-          setTimeout(() => {
-            view.flipCard(model.revealedCard[0])
-            view.flipCard(model.revealedCard[1])
-            model.revealedCard = []
-            this.currentState = GAME_STATE.FirstCardAwaits
-          }, 1000)
+          setTimeout(this.resetCards, 1000)
         }
         break
     }
     console.log('this.currentState', this.currentState)
-    console.log('revealCards', model.revealedCard.map(card => card.dataset.index % 13))
+    console.log('revealCards', model.revealedCards.map(card => card.dataset.index % 13 + 1))
+  },
+  resetCards() {
+    view.flipCards(...model.revealedCards)
+    model.revealedCards = []
+    controller.currentState = GAME_STATE.FirstCardAwaits
   }
 }
 
