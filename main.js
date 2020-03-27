@@ -15,7 +15,10 @@ const Symbols = [
 
 const model = {
   //暫存牌組
-  revealedCard: []
+  revealedCard: [],
+  isRevealedCardsMatched() {
+    return this.revealedCard[0].dataset.index % 13 === this.revealedCard[1].dataset.index % 13
+  }
 }
 
 const view = {
@@ -63,6 +66,9 @@ const view = {
   displayCards(indexes) {
     const rootElement = document.querySelector('#cards')
     rootElement.innerHTML = indexes.map(index => this.getCardElement(index)).join('')
+  },
+  pairCard(card) {
+    card.classList.add('paired')
   }
 }
 
@@ -71,6 +77,37 @@ const controller = {
   currentState: GAME_STATE.FirstCardAwaits,
   generateCards() {
     view.displayCards(utility.getRandomNumberArray(52))
+  },
+  dispatchCardAction(card) {
+    if (!card.classList.contains('back')) return
+    switch (this.currentState) {
+      case GAME_STATE.FirstCardAwaits:
+        view.flipCard(card)
+        model.revealedCard.push(card)
+        this.currentState = GAME_STATE.SecondCardAwaits
+        break
+      case GAME_STATE.SecondCardAwaits:
+        view.flipCard(card)
+        model.revealedCard.push(card)
+        if (model.isRevealedCardsMatched()) {
+          this.currentState = GAME_STATE.CardsMatched
+          view.pairCard(model.revealedCard[0])
+          view.pairCard(model.revealedCard[1])
+          model.revealedCard = []
+          this.currentState = GAME_STATE.FirstCardAwaits
+        } else {
+          this.currentState = GAME_STATE.CardMatchFailed
+          setTimeout(() => {
+            view.flipCard(model.revealedCard[0])
+            view.flipCard(model.revealedCard[1])
+            model.revealedCard = []
+            this.currentState = GAME_STATE.FirstCardAwaits
+          }, 1000)
+        }
+        break
+    }
+    console.log('this.currentState', this.currentState)
+    console.log('revealCards', model.revealedCard.map(card => card.dataset.index % 13))
   }
 }
 
@@ -90,6 +127,6 @@ controller.generateCards()
 
 document.querySelectorAll('.card').forEach(card => {
   card.addEventListener('click', () => {
-    view.flipCard(card)
+    controller.dispatchCardAction(card)
   })
 })
