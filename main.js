@@ -18,7 +18,9 @@ const model = {
   revealedCards: [],
   isRevealedCardsMatched() {
     return this.revealedCards[0].dataset.index % 13 === this.revealedCards[1].dataset.index % 13
-  }
+  },
+  score: 0,
+  triedTimes: 0
 }
 
 const view = {
@@ -72,6 +74,31 @@ const view = {
     cards.map(card => {
       card.classList.add('paired')
     })
+  },
+  renderScore(score) {
+    document.querySelector('.score').innerHTML = `Score: ${score}`
+  },
+  renderTriedTimes(times) {
+    document.querySelector('.tried').innerHTML = `You've tried: ${times} times`
+  },
+  appendWrongAnimation(...cards) {
+    cards.map(card => {
+      card.classList.add('wrong')
+      card.addEventListener('animationend', () => {
+        event.target.classList.remove('wrong'), { once: true }
+      })
+    })
+  },
+  showGameFinished() {
+    const div = document.createElement('div')
+    div.classList.add('completed')
+    div.innerHTML = `
+      <p>Complete!</p>
+      <p>Score: ${model.score}</p>
+      <p>You've tried: ${model.triedTimes} times</p>`
+
+    const header = document.querySelector('#header')
+    header.before(div)
   }
 }
 
@@ -80,6 +107,8 @@ const controller = {
   currentState: GAME_STATE.FirstCardAwaits,
   generateCards() {
     view.displayCards(utility.getRandomNumberArray(52))
+    view.renderScore(model.score)
+    view.renderTriedTimes(model.triedTimes)
   },
   dispatchCardAction(card) {
     if (!card.classList.contains('back')) return
@@ -90,15 +119,23 @@ const controller = {
         this.currentState = GAME_STATE.SecondCardAwaits
         break
       case GAME_STATE.SecondCardAwaits:
+        view.renderTriedTimes(++model.triedTimes)
         view.flipCards(card)
         model.revealedCards.push(card)
         if (model.isRevealedCardsMatched()) {
+          view.renderScore(model.score += 10)
           this.currentState = GAME_STATE.CardsMatched
           view.pairCards(...model.revealedCards)
           model.revealedCards = []
           this.currentState = GAME_STATE.FirstCardAwaits
+          if (model.score === 260) {
+            console.log('showGameFinished')
+            view.showGameFinished()
+            return
+          }
         } else {
           this.currentState = GAME_STATE.CardMatchFailed
+          view.appendWrongAnimation(...model.revealedCards)
           setTimeout(this.resetCards, 1000)
         }
         break
